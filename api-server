@@ -1,0 +1,33 @@
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+# Временное хранилище (в памяти)
+scores = []
+
+@app.route('/api/score', methods=['POST'])
+def save_score():
+    data = request.get_json()
+    if not data or 'player_x_wins' not in data or 'player_o_wins' not in data:
+        return jsonify({"error": "Требуются поля: player_x_wins, player_o_wins"}), 400
+
+    scores.append({
+        "x": data["player_x_wins"],
+        "o": data["player_o_wins"]
+    })
+    return jsonify({"status": "success", "message": "Счёт сохранён"}), 201
+
+@app.route('/api/score', methods=['GET'])
+def get_scores():
+    total_x = sum(game["x"] for game in scores)
+    total_o = sum(game["o"] for game in scores)
+    return jsonify({
+        "total_games": len(scores),
+        "total_x_wins": total_x,
+        "total_o_wins": total_o,
+        "all_records": scores
+    }), 200
+
+if __name__ == '__main__':
+    print("Сервер запущен на http://localhost:5000")
+    app.run(host='127.0.0.1', port=5000, debug=True)
